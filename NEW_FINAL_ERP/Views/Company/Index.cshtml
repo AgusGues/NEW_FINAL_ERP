@@ -1,0 +1,125 @@
+﻿@model IEnumerable<NEW_FINAL_ERP.Models.Company>
+
+@{
+    ViewData["Title"] = "Company";
+}
+
+<h2>Company Master</h2>
+
+<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createModal">
+    + Add Company
+</button>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Company Code</th>
+            <th>Company Name</th>
+            <th>Base Currency</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody id="companyTable">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.CompanyCode</td>
+                <td>@item.CompanyName</td>
+                <td>@item.BaseCurrencyCode</td>
+                <td>
+                    @(item.IsActive ? "Active" : "Inactive")
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- ================= MODAL CREATE ================= -->
+
+<div class="modal fade" id="createModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form id="createForm">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Company</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label>Company Name</label>
+                        <input name="CompanyName" class="form-control" />
+                        <span class="text-danger" data-valmsg-for="CompanyName"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Base Currency</label>
+                        <select name="BaseCurrencyCode" class="form-select" required>
+                            <option value="">-- pilih currency --</option>
+                            <option value="IDR">IDR</option>
+                            <option value="USD">USD</option>
+                        </select>
+
+                        <span class="text-danger" data-valmsg-for="BaseCurrencyCode"></span>
+                    </div>
+
+                    <div class="form-check">
+                        <input type="hidden" name="IsActive" value="false" />
+                        <input type="checkbox" name="IsActive" value="true" class="form-check-input" checked />
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+
+        $("#createForm").submit(function (e) {
+
+            e.preventDefault();
+
+            $.ajax({
+                url: "/Company/Create",
+                type: "POST",
+                data: $(this).serialize(),
+                success: function () {
+
+                    location.reload();
+                },
+                        error: function (xhr) {
+
+            console.log(xhr.responseText);
+
+            let errors = xhr.responseJSON?.errors;
+
+            if (!errors) return;
+
+            $("span[data-valmsg-for]").text("");
+
+            for (let key in errors) {
+
+                $("span[data-valmsg-for='" + key + "']")
+                    .text(errors[key][0]);
+            }
+        }
+            });
+
+        });
+
+    </script>
+
+}

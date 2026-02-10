@@ -1,0 +1,27 @@
+﻿@{
+    ViewBag.Title = "Generate Number";
+}
+
+<h2>Generate Number</h2>
+
+@using (Html.BeginForm())
+{
+    <div>
+        Company Id
+        <input name="companyId" class="form-control" />
+    </div>
+
+    <div>
+        Entity
+        <input name="entityName" class="form-control" />
+    </div>
+
+    <button type="submit">Generate</button>
+}
+
+@if (ViewBag.Number != null)
+{
+    <h3>Number : @ViewBag.Number</h3>
+}
+
+@Html.ValidationSummary()
