@@ -1,41 +1,67 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using NEW_FINAL_ERP.Models;
 using NEW_FINAL_ERP.Services;
-
 
 namespace NEW_FINAL_ERP.Controllers
 {
     public class BranchController : Controller
     {
         private readonly BranchService _service;
-        private readonly CompanyService _company;
+        private readonly CompanyService _companyService;
 
-        public BranchController(BranchService s, CompanyService c)
+        public BranchController(
+            BranchService service,
+            CompanyService companyService)
         {
-            _service = s;
-            _company = c;
+            _service = service;
+            _companyService = companyService;
         }
 
         public async Task<IActionResult> Index()
-            => View(await _service.GetAll());
-
-        public async Task<IActionResult> Create()
         {
-            ViewBag.CompanyList = await _company.GetAll();
-            return View(new Branch());
+            return View(await _service.GetAll());
+        }
+
+        public IActionResult Create()
+        {
+            LoadCompany();
+            return PartialView("_Form", new Branch());
+        }
+
+        public async Task<IActionResult> Edit(int id)
+        {
+            LoadCompany();
+            return PartialView("_Form", await _service.GetById(id));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Branch model)
+        public async Task<IActionResult> Save(Branch model)
         {
-            ViewBag.CompanyList = await _company.GetAll();
-
             if (!ModelState.IsValid)
-                return View(model);
+                return BadRequest(ModelState);
 
-            await _service.Create(model);
-            return RedirectToAction("Index");
+            if (model.BranchId == 0)
+                await _service.Create(model);
+            else
+                await _service.Update(model);
+
+            return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _service.Delete(id);
+            return Ok();
+        }
+
+        private void LoadCompany()
+        {
+            ViewBag.CompanyList =
+                new SelectList(_companyService.GetAll().Result,
+                    "CompanyId",
+                    "CompanyName");
         }
     }
-
 }

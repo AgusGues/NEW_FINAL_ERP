@@ -1,0 +1,70 @@
+﻿@model Branch
+
+<div class="modal fade" id="branchModal">
+	<div class="modal-dialog">
+		<div class="modal-content">
+
+			<form id="branchForm">
+
+				<div class="modal-header">
+					<h5>@(Model.BranchId == 0 ? "Tambah Branch" : "Edit Branch")</h5>
+				</div>
+
+				<div class="modal-body">
+
+					<input asp-for="BranchId" hidden />
+					<input asp-for="VersionNo" hidden />
+					<input asp-for="BranchCode" class="form-control" hidden />
+					
+
+					<div class="mb-3">
+						<label>Name</label>
+						<input asp-for="BranchName" class="form-control" />
+						<span asp-validation-for="BranchName" class="text-danger"></span>
+					</div>
+
+					<div class="mb-3">
+						<label>Company</label>
+						<select asp-for="CompanyId"
+								asp-items="ViewBag.CompanyList"
+								class="form-control"></select>
+					</div>
+
+				</div>
+
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">
+						Close
+					</button>
+
+					<button type="button" class="btn btn-primary"
+							onclick="saveData()">
+						Save
+					</button>
+				</div>
+
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script>
+
+	function saveData(){
+
+	var data=$("#branchForm").serialize();
+
+	$.post('/Branch/Save',data)
+	.done(()=>{
+	$('#branchModal').modal('hide');
+	location.reload();
+	})
+	.fail(e=>{
+	alert("Error: "+e.responseText);
+	});
+
+	}
+
+</script>

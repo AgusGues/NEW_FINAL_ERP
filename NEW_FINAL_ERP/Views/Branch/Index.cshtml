@@ -1,0 +1,73 @@
+﻿@model IEnumerable<Branch>
+
+<h3>Branch</h3>
+
+<button class="btn btn-primary mb-3" onclick="openCreate()">
+	Tambah Branch
+</button>
+
+<table class="table table-bordered">
+	<thead>
+		<tr>
+			<th>Code</th>
+			<th>Name</th>
+			<th>Company</th>
+			<th>Action</th>
+		</tr>
+	</thead>
+
+	<tbody>
+		@foreach (var item in Model)
+		{
+			<tr>
+				<td>@item.BranchCode</td>
+				<td>@item.BranchName</td>
+				<td>@item.CompanyName</td>
+				<td>
+					<button class="btn btn-warning"
+							onclick="openEdit(@item.BranchId)">
+						Edit
+					</button>
+
+					<button class="btn btn-danger"
+							onclick="deleteData(@item.BranchId)">
+						Delete
+					</button>
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+<div id="modalContainer"></div>
+
+@section Scripts {
+
+	<script>
+
+		function openCreate(){
+		$.get('/Branch/Create',res=>{
+		$('#modalContainer').html(res);
+		$('#branchModal').modal('show');
+		});
+		}
+
+		function openEdit(id){
+		$.get('/Branch/Edit/'+id,res=>{
+		$('#modalContainer').html(res);
+		$('#branchModal').modal('show');
+		});
+		}
+
+		function deleteData(id){
+
+		if(!confirm("Yakin hapus?")) return;
+
+		$.post('/Branch/Delete/'+id,()=>{
+		location.reload();
+		});
+		}
+
+	</script>
+
+}

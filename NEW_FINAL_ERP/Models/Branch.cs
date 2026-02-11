@@ -14,6 +14,10 @@ namespace NEW_FINAL_ERP.Models
         [Required]
         public int CompanyId { get; set; }
 
+        public string? CompanyName { get; set; }
+
+        public int VersionNo { get; set; }
+
         public bool IsActive { get; set; } = true;
     }
 }
