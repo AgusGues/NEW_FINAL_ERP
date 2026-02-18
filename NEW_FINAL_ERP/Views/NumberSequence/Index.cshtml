@@ -1,0 +1,111 @@
+﻿@model IEnumerable<NEW_FINAL_ERP.Models.NumberSequence>
+
+<h3>Number Sequence</h3>
+
+<button class="btn btn-primary mb-2" onclick="openCreate()">
+    Add Sequence
+</button>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+           
+            <th>Entity</th>
+            <th>Prefix</th>
+            <th>Number Length</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var x in Model)
+        {
+            <tr>
+                
+                <td>@x.EntityName</td>
+                <td>@x.Prefix</td>
+                <td>@x.NumberLength</td>
+
+                <td>
+                    <button class="btn btn-danger btn-sm"
+                            onclick="deleteData(@x.SequenceId)">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+<!-- MODAL -->
+<div class="modal fade" id="seqModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5>Create Number Sequence</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input id="CompanyId" class="form-control mb-2" hidden />
+                <input id="EntityName" class="form-control mb-2" placeholder="Entity Name" />
+                <input id="Prefix" class="form-control mb-2" placeholder="Prefix" />
+                <input id="NumberLength" class="form-control mb-2" type="number" placeholder="Start Number" />
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="saveData()">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+
+    <script>
+
+        function openCreate(){
+
+            $("#CompanyId").val(0);
+            $("#EntityName").val("");
+            $("#Prefix").val("");
+            $("#NumberLength").val(1);
+
+            $("#seqModal").modal("show");
+        }
+
+
+        function saveData(){
+
+            let data = {
+                CompanyId : $("#CompanyId").val(),
+                EntityName : $("#EntityName").val(),
+                Prefix : $("#Prefix").val(),
+                NumberLength : $("#NumberLength").val()
+            };
+
+            $.post("/NumberSequence/Create", data)
+            .done(()=> location.reload())
+            .fail(err => alert(err.responseText));
+        }
+
+
+        function deleteData(id){
+
+            if(!confirm("Delete data ?"))
+                return;
+
+            $.post("/NumberSequence/Delete/" + id)
+            .done(()=> location.reload());
+        }
+
+    </script>
+
+}

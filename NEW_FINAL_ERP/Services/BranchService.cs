@@ -81,7 +81,7 @@ namespace NEW_FINAL_ERP.Services
                 new
                 {
                     CompanyId = 0,
-                    EntityName = "BR",
+                    EntityName = "TEST",
                     DocumentId = Guid.NewGuid(),
                     CommandId = Guid.NewGuid()
                 },
