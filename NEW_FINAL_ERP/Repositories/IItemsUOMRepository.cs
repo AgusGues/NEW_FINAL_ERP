@@ -1,11 +1,12 @@
-﻿using NEW_FINAL_ERP.Infrastructure;
+﻿using NEW_FINAL_ERP.DTo;
+using NEW_FINAL_ERP.Infrastructure;
 using NEW_FINAL_ERP.Models;
 
 namespace NEW_FINAL_ERP.Repositories
 {
     public interface IItemsUOMRepository
     {
-        Task<IEnumerable<ItemsUom>> GetAll();
+        Task<IEnumerable<ItemsUomListDto>> GetAll();
 
         Task<ItemsUom?> GetById(int id);
 

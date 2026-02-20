@@ -4,6 +4,7 @@ using System.Data;
 using NEW_FINAL_ERP.Repositories;
 using NEW_FINAL_ERP.Models;
 using Microsoft.Data.SqlClient;
+using NEW_FINAL_ERP.DTo;
 
 namespace NEW_FINAL_ERP.Services
 {
@@ -33,7 +34,7 @@ namespace NEW_FINAL_ERP.Services
             return barcode;
         }
 
-        public Task<IEnumerable<ItemsUom>> GetAll() => _repo.GetAll();
+        public Task<IEnumerable<ItemsUomListDto>> GetAll() => _repo.GetAll();
 
 
         public async Task Create(ItemsUom itemsuom)

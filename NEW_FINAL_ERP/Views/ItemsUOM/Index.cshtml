@@ -1,5 +1,82 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@using NEW_FINAL_ERP.DTo
+@model IEnumerable<ItemsUomListDto>
+<h3>Items</h3>
+<button class="btn btn-primary mb-3" onclick="openCreate()">
+    Tambah Items UOM
+</button>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Item Code</th>
+            <th>Item Name</th>
+            <th>Satuan Base</th>
+            <th>Satuan Konversi</th>
+            <th>Konversi</th>
+            <th>Barcode</th>
+            <th>Base?</th>
+            <th>Default Sales?</th>
+            <th>Default Purchase?</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.ItemCode</td>
+                <td>@item.ItemName</td>
+                <td>@item.Satuan</td>
+                <td>@item.SatuanKonversi</td>
+                <td>@item.ConversionToBase</td>
+                <td>@item.Barcode</td>
+                <td>@(item.IsBase ? "Yes" : "No")</td>
+                <td>@(item.IsDefaultSales ? "Yes" : "No")</td>
+                <td>@(item.IsDefaultPurchase ? "Yes" : "No")</td>
+                <td>
+                    <button class="btn btn-warning"
+                            onclick="openEdit(@item.ItemUOMId)">
+                        Edit
+                    </button>
+
+                    <button class="btn btn-danger"
+                            onclick="deleteData(@item.ItemUOMId)">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div id="modalContainer"></div>
+
+@section Scripts {
+
+    <script>
+
+        function openCreate(){
+        $.get('/Items/Create',res=>{
+        $('#modalContainer').html(res);
+        $('#itemsModal').modal('show');
+        });
+        }
+
+        function openEdit(id){
+        $.get('/Items/Edit/'+id,res=>{
+        $('#modalContainer').html(res);
+        $('#itemsModal').modal('show');
+        });
+        }
+
+        function deleteData(id){
+
+        if(!confirm("Yakin hapus?")) return;
+
+        $.post('/Items/Delete/'+id,()=>{
+        location.reload();
+        });
+        }
+
+    </script>
+
 }

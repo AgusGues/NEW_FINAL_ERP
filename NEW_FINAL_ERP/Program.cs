@@ -32,6 +32,7 @@ builder.Services.AddScoped<IBranchRepository, BranchRepository>();
 builder.Services.AddScoped<INumberSequenceRepository, NumberSequenceRepository>();
 builder.Services.AddScoped<IItemsRepository, ItemsRepository>();
 builder.Services.AddScoped<IUnitRepository, UnitRepository>();
+builder.Services.AddScoped<IItemsUOMRepository, ItemsUOMRepository>();
 
 
 // ==========================
@@ -42,7 +43,7 @@ builder.Services.AddScoped<CompanyService>();
 builder.Services.AddScoped<BranchService>();
 builder.Services.AddScoped<ItemsServices>();
 builder.Services.AddScoped<UnitService>();
-
+builder.Services.AddScoped<ItemsUOMService>();
 
 builder.Services.AddControllersWithViews();
 
@@ -54,6 +55,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Items}/{action=Index}/{id?}");
+    pattern: "{controller=ItemsUOM}/{action=Index}/{id?}");
 
 app.Run();

@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
+using NEW_FINAL_ERP.DTo;
 using NEW_FINAL_ERP.Infrastructure;
 using NEW_FINAL_ERP.Models;
 
@@ -19,11 +20,31 @@ namespace NEW_FINAL_ERP.Repositories.Implementations
             await uow.Conn.ExecuteAsync(sql, new {id},uow.Tx);
         }
 
-        public async Task<IEnumerable<ItemsUom>> GetAll()
+        public async Task<IEnumerable<ItemsUomListDto>> GetAll()
         {
             using var conn = new SqlConnection(_connString);
-            var sql = @"select ItemUOMId,ItemId,UnitId,ConversionToBase,IsBase,IsDefaultSales,IsDefaultPurchase,Barcode,IsActive,isInternalBarcode from ItemUOM where IsActive=1";
-            return await conn.QueryAsync<ItemsUom>(sql);
+            var sql = @"
+                        SELECT 
+                        iu.ItemUOMId,
+                        iu.ItemId,
+                        i.ItemCode,
+                        i.ItemName,
+                        u.UnitName  AS Satuan,
+                        ux.UnitName AS SatuanKonversi,
+                        iu.ConversionToBase,
+                        iu.IsBase,
+                        iu.IsDefaultSales,
+                        iu.IsDefaultPurchase,
+                        iu.Barcode,
+                        iu.isinternalbarcode
+                    FROM ItemUOM iu
+                    JOIN Items i       ON iu.ItemId = i.ItemId
+                    JOIN Unit u        ON i.Unit = u.UnitId         
+                    JOIN Unit ux       ON iu.UnitId = ux.UnitId     
+                    WHERE iu.IsActive = 1 
+                      AND i.IsActive = 1
+                      ";
+            return await conn.QueryAsync<ItemsUomListDto>(sql);
         }
 
         public async Task<ItemsUom?> GetById(int id)
