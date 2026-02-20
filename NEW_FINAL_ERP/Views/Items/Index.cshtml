@@ -1,0 +1,73 @@
+﻿@model IEnumerable<Items>
+
+<h3>Items</h3>
+<button class="btn btn-primary mb-3" onclick="openCreate()">
+	Tambah Items
+</button>
+
+<table class="table table-bordered">
+
+	<thead>
+		<tr>
+			<th>Item Code</th>
+			<th>Item Name</th>
+			<th>Unit</th>
+		</tr>
+	</thead>
+
+	<tbody>
+		@foreach (var item in Model)
+		{
+			<tr>
+				<td>@item.ItemCode</td>
+				<td>@item.ItemName</td>
+				<td>@item.UnitName</td>
+				<td>
+					<button class="btn btn-warning"
+							onclick="openEdit(@item.ItemId)">
+						Edit
+					</button>
+
+					<button class="btn btn-danger"
+							onclick="deleteData(@item.ItemId)">
+						Delete
+					</button>
+				</td>
+			</tr>
+		}
+	</tbody>
+
+	</table>
+
+	<div id="modalContainer"></div>
+
+@section Scripts {
+
+	<script>
+
+		function openCreate(){
+		$.get('/Items/Create',res=>{
+		$('#modalContainer').html(res);
+		$('#itemsModal').modal('show');
+		});
+		}
+
+		function openEdit(id){
+		$.get('/Items/Edit/'+id,res=>{
+		$('#modalContainer').html(res);
+		$('#itemsModal').modal('show');
+		});
+		}
+
+		function deleteData(id){
+
+		if(!confirm("Yakin hapus?")) return;
+
+		$.post('/Items/Delete/'+id,()=>{
+		location.reload();
+		});
+		}
+
+	</script>
+
+}

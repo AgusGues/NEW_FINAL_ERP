@@ -1,0 +1,70 @@
+﻿@model Items
+
+<div class="modal fade" id="itemsModal">
+	<div class="modal-dialog">
+		<div class="modal-content">
+
+			<form id="itemsForm">
+
+				<div class="modal-header">
+					<h5>@(Model.ItemId == 0 ? "Tambah Items" : "Edit Items")</h5>
+				</div>
+
+				<div class="modal-body">
+
+					<input asp-for="ItemId" hidden />
+					
+					<input asp-for="ItemCode" class="form-control" hidden />
+
+
+					<div class="mb-3">
+						<label>Item Name</label>
+						<input asp-for="ItemName" class="form-control" />
+						<span asp-validation-for="ItemName" class="text-danger"></span>
+					</div>
+
+					<div class="mb-3">
+						<label>Unit</label>
+						<select asp-for="UnitId"
+								asp-items="ViewBag.UnitList"
+								class="form-control"></select>
+					</div>
+
+				</div>
+
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">
+						Close
+					</button>
+
+					<button type="button" class="btn btn-primary"
+							onclick="saveData()">
+						Save
+					</button>
+				</div>
+
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script>
+
+	function saveData(){
+
+	var data=$("#itemsForm").serialize();
+
+	$.post('/Items/Save',data)
+	.done(()=>{
+	$('#itemsModal').modal('hide');
+	location.reload();
+	})
+	.fail(e=>{
+	alert("Error: "+e.responseText);
+	});
+
+	}
+
+</script>

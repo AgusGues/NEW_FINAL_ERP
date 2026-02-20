@@ -1,0 +1,73 @@
+﻿@model IEnumerable<Unit>
+
+<h3>Unit</h3>
+<button class="btn btn-primary mb-3" onclick="openCreate()">
+	Tambah Unit
+</button>
+
+<table class="table table-bordered">
+
+	<thead>
+		<tr>
+			<th>Unit Code</th>
+			<th>Unit Name</th>
+			<th>Description</th>
+		</tr>
+	</thead>
+
+	<tbody>
+		@foreach (var item in Model)
+		{
+			<tr>
+				<td>@item.UnitCode</td>
+				<td>@item.UnitName</td>
+				<td>@item.Description</td>
+				<td>
+					<button class="btn btn-warning"
+							onclick="openEdit(@item.UnitId)">
+						Edit
+					</button>
+
+					<button class="btn btn-danger"
+							onclick="deleteData(@item.UnitId)">
+						Delete
+					</button>
+				</td>
+			</tr>
+		}
+	</tbody>
+
+</table>
+
+<div id="modalContainer"></div>
+
+@section Scripts {
+
+	<script>
+
+		function openCreate(){
+		$.get('/Unit/Create',res=>{
+		$('#modalContainer').html(res);
+		$('#unitModal').modal('show');
+		});
+		}
+
+		function openEdit(id){
+		$.get('/Unit/Edit/'+id,res=>{
+		$('#modalContainer').html(res);
+		$('#unitModal').modal('show');
+		});
+		}
+
+		function deleteData(id){
+
+		if(!confirm("Yakin hapus?")) return;
+
+		$.post('/Unit/Delete/'+id,()=>{
+		location.reload();
+		});
+		}
+
+	</script>
+
+}

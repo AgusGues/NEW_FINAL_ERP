@@ -8,47 +8,44 @@ using System.Data;
 
 namespace NEW_FINAL_ERP.Services
 {
-    public class BranchService
+    public class ItemsServices
     {
         private readonly string _connString;
-        private readonly IBranchRepository _repo;
+        private readonly IItemsRepository _repo;
 
-        public BranchService(IConfiguration config,IBranchRepository repo)
+        public ItemsServices(IConfiguration config, IItemsRepository repo)
         {
-            _connString = config.GetConnectionString("DefaultConnection")!;
+            _connString = config.GetConnectionString("DefaultConnection");
             _repo = repo;
         }
 
-        public Task<IEnumerable<Branch>> GetAll()  => _repo.GetAll();
+        public Task<IEnumerable<Items>> GetAll() => _repo.GetAll();
 
-        public Task<Branch?> GetById(int id) => _repo.GetById(id);
+        public Task<Items?> GetById(int id) => _repo.GetById(id);
 
-        public async Task Create(Branch branch)
+        public async Task Create(Items items)
         {
             using var uow = new UnitOfWork(new SqlConnection(_connString));
-
-            try
+            try 
             {
-                branch.BranchCode = await GenerateCode(uow);
-
-                await _repo.Insert(uow, branch);
-
+                items.ItemCode = await GenerateCode(uow);
+                await _repo.Insert(uow, items);
                 uow.Commit();
             }
-            catch
+            catch 
             {
                 uow.Rollback();
                 throw;
             }
         }
 
-        public async Task Update(Branch branch)
+        public async Task Update(Items items)
         {
             using var uow = new UnitOfWork(new SqlConnection(_connString));
 
             try
             {
-                await _repo.Update(uow, branch);
+                await _repo.Update(uow, items);
                 uow.Commit();
             }
             catch
@@ -61,7 +58,6 @@ namespace NEW_FINAL_ERP.Services
         public async Task Delete(int id)
         {
             using var uow = new UnitOfWork(new SqlConnection(_connString));
-
             try
             {
                 await _repo.Delete(uow, id);
@@ -74,6 +70,7 @@ namespace NEW_FINAL_ERP.Services
             }
         }
 
+
         private async Task<string> GenerateCode(UnitOfWork uow)
         {
             var cmd = new CommandDefinition(
@@ -81,7 +78,7 @@ namespace NEW_FINAL_ERP.Services
                 new
                 {
                     CompanyId = 0,
-                    EntityName = "BR",
+                    EntityName = "ITM",
                     DocumentId = Guid.NewGuid(),
                     CommandId = Guid.NewGuid()
                 },
@@ -92,5 +89,4 @@ namespace NEW_FINAL_ERP.Services
                    ?? throw new Exception("Generate BranchCode gagal");
         }
     }
-
 }

@@ -30,6 +30,8 @@ builder.Services.AddScoped<UnitOfWork>();
 builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 builder.Services.AddScoped<IBranchRepository, BranchRepository>();
 builder.Services.AddScoped<INumberSequenceRepository, NumberSequenceRepository>();
+builder.Services.AddScoped<IItemsRepository, ItemsRepository>();
+builder.Services.AddScoped<IUnitRepository, UnitRepository>();
 
 
 // ==========================
@@ -38,7 +40,8 @@ builder.Services.AddScoped<INumberSequenceRepository, NumberSequenceRepository>(
 builder.Services.AddScoped<NumberSequenceService>();
 builder.Services.AddScoped<CompanyService>();
 builder.Services.AddScoped<BranchService>();
-
+builder.Services.AddScoped<ItemsServices>();
+builder.Services.AddScoped<UnitService>();
 
 
 builder.Services.AddControllersWithViews();
@@ -51,6 +54,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=NumberSequence}/{action=Index}/{id?}");
+    pattern: "{controller=Items}/{action=Index}/{id?}");
 
 app.Run();
