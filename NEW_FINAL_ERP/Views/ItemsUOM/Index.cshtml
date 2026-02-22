@@ -1,82 +1,123 @@
-﻿@using NEW_FINAL_ERP.DTo
-@model IEnumerable<ItemsUomListDto>
-<h3>Items</h3>
-<button class="btn btn-primary mb-3" onclick="openCreate()">
-    Tambah Items UOM
-</button>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Item Code</th>
-            <th>Item Name</th>
-            <th>Satuan Base</th>
-            <th>Satuan Konversi</th>
-            <th>Konversi</th>
-            <th>Barcode</th>
-            <th>Base?</th>
-            <th>Default Sales?</th>
-            <th>Default Purchase?</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.ItemCode</td>
-                <td>@item.ItemName</td>
-                <td>@item.Satuan</td>
-                <td>@item.SatuanKonversi</td>
-                <td>@item.ConversionToBase</td>
-                <td>@item.Barcode</td>
-                <td>@(item.IsBase ? "Yes" : "No")</td>
-                <td>@(item.IsDefaultSales ? "Yes" : "No")</td>
-                <td>@(item.IsDefaultPurchase ? "Yes" : "No")</td>
-                <td>
-                    <button class="btn btn-warning"
-                            onclick="openEdit(@item.ItemUOMId)">
-                        Edit
-                    </button>
+﻿@model IEnumerable<NEW_FINAL_ERP.DTo.ItemsUomListDto>
 
-                    <button class="btn btn-danger"
-                            onclick="deleteData(@item.ItemUOMId)">
-                        Delete
-                    </button>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div class="container-fluid mt-3">
+
+    <div class="d-flex justify-content-between mb-3">
+        <h4>Item UOM Management</h4>
+        <button class="btn btn-primary" onclick="openModal(0)">
+            + Add UOM
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Item Code</th>
+                    <th>Item Name</th>
+                    <th>Satuan</th>
+                    <th>UOM</th>
+                    <th>Conversion</th>
+                    <th>Base</th>
+                    <th>Sales</th>
+                    <th>Purchase</th>
+                    <th>Barcode</th>
+                    <th>Type</th>
+                    <th width="160">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.ItemCode</td>
+                        <td>@item.ItemName</td>
+                        <td>@item.Satuan</td>
+                        <td>@item.SatuanKonversi</td>
+                        <td>@item.ConversionToBase.ToString("N0")</td>
+                        <td>
+                            @if (item.IsBase)
+                            {
+                                <span class="badge bg-success">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-dark">No</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.IsDefaultSales)
+                            {
+                                <span class="badge bg-success">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">No</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.IsDefaultPurchase)
+                            {
+                                <span class="badge bg-success">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">No</span>
+                            }
+                        </td>
+                        <td>@item.Barcode</td>
+                        <td>
+                            @if (item.IsInternalBarcode)
+                            {
+                                <span class="badge bg-success">External</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Internal</span>
+                            }
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-warning"
+                                    onclick="openModal(@item.ItemUOMId)">
+                                Edit
+                            </button>
+
+                            <button class="btn btn-sm btn-danger"
+                                    onclick="deleteData(@item.ItemUOMId)">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
 
 <div id="modalContainer"></div>
 
 @section Scripts {
-
     <script>
 
-        function openCreate(){
-        $.get('/Items/Create',res=>{
-        $('#modalContainer').html(res);
-        $('#itemsModal').modal('show');
-        });
+        function openModal(id) {
+            $.get('/ItemsUOM/Modal', { id: id }, function (data) {
+                $('#modalContainer').html(data);
+                $('#itemUomModal').modal('show');
+            });
         }
 
-        function openEdit(id){
-        $.get('/Items/Edit/'+id,res=>{
-        $('#modalContainer').html(res);
-        $('#itemsModal').modal('show');
-        });
-        }
+        
 
-        function deleteData(id){
+        function deleteData(id) {
+            if (!confirm("Are you sure?")) return;
 
-        if(!confirm("Yakin hapus?")) return;
-
-        $.post('/Items/Delete/'+id,()=>{
-        location.reload();
-        });
+            $.post('/ItemsUOM/Delete', { id: id }, function (response) {
+                if (response.success) {
+                    location.reload();
+                }
+            });
         }
 
     </script>
-
 }

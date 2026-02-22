@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using NEW_FINAL_ERP.DTo;
 using NEW_FINAL_ERP.Models;
 using NEW_FINAL_ERP.Services;
 
@@ -13,30 +14,94 @@ namespace NEW_FINAL_ERP.Controllers
             _service = service;
             
         }
-        public async Task<IActionResult>Index()
+        // =========================================
+        // INDEX (List View)
+        // =========================================
+        public async Task<IActionResult> Index()
         {
-            return View(await _service.GetAll());
+            var data = await _service.GetAll();
+            return View(data);
         }
 
-        public IActionResult Create()
+        //Auto complete Items
+        [HttpGet]
+        public async Task<IActionResult> SearchItem(string term)
         {
-            //LoadUnit();
-            return PartialView("_Form", new Items());
+            var result = await _service.SearchItemAsync(term);
+            return Json(result);
         }
 
+        //Auto complete Unit
+        [HttpGet]
+        public async Task<IActionResult> SearchUnit(string term)
+        {
+            var result = await _service.SearchUnitAsync(term);
+            return Json(result);
+        }
+
+        // =========================================
+        // LOAD MODAL (Create + Edit)
+        // =========================================
+        public async Task<IActionResult> Modal(int id = 0)
+        {
+            var dto = await _service.GetModalDtoAsync(id);
+            return PartialView("_ItemUOMModal", dto);
+        }
+
+
+        // =========================================
+        // SAVE (Create + Update)
+        // =========================================
         [HttpPost]
-        public async Task<IActionResult> Save(ItemsUom model)
+        public async Task<IActionResult> Modal(ItemUOMModalDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                var errors = ModelState.Values
+                                       .SelectMany(v => v.Errors)
+                                       .Select(e => e.ErrorMessage)
+                                       .ToArray();
 
-            if (model.ItemId == 0)
-                await _service.Create(model);
-            //else
-            //    await _service.Update(model);
+                return Json(new { success = false, errors });
+            }
 
-            return Ok();
+            try
+            {
+                var entity = new ItemsUom
+                {
+                    ItemUOMId = dto.ItemUOMId,
+                    ItemId = dto.ItemId,
+                    UnitId = dto.UnitId,
+                    ConversionToBase = dto.ConversionToBase,
+                    IsBase = dto.IsBase,
+                    IsDefaultSales = dto.IsDefaultSales,
+                    IsDefaultPurchase = dto.IsDefaultPurchase,
+                    Barcode = dto.Barcode,
+                    IsInternalBarcode = false,
+                    IsActive = true
+                };
 
+                if (dto.ItemUOMId == 0)
+                    await _service.Create(entity);
+                else
+                    await _service.Update(entity);
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // =========================================
+        // DELETE (Soft Delete)
+        // =========================================
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _service.Delete(id);
+            return Json(new { success = true });
         }
     }
 }
