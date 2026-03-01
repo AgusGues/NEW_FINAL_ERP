@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
+using NEW_FINAL_ERP.DTo;
 using NEW_FINAL_ERP.Infrastructure;
 using NEW_FINAL_ERP.Models;
 using NEW_FINAL_ERP.Repositories;
@@ -19,7 +20,8 @@ namespace NEW_FINAL_ERP.Services
             _repo = repo;
         }
 
-        public Task<IEnumerable<Items>> GetAll() => _repo.GetAll();
+        public Task<PagedResultItemsDto<Items>> GetAll(string? search, int page, int pageSize)
+    => _repo.GetAll(search, page, pageSize);
 
         public Task<Items?> GetById(int id) => _repo.GetById(id);
 

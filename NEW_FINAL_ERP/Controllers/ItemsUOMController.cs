@@ -17,10 +17,16 @@ namespace NEW_FINAL_ERP.Controllers
         // =========================================
         // INDEX (List View)
         // =========================================
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string search, int page = 1, int pageSize = 5)
         {
-            var data = await _service.GetAll();
-            return View(data);
+            var result = await _service.GetAll(search, page, pageSize);
+
+            ViewBag.Search = search;
+            ViewBag.Page = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalPages = result.TotalPages;
+
+            return View(result);
         }
 
         //Auto complete Items
@@ -29,6 +35,17 @@ namespace NEW_FINAL_ERP.Controllers
         {
             var result = await _service.SearchItemAsync(term);
             return Json(result);
+        }
+
+        //Cetak Barcode
+        public async Task<IActionResult> PrintBarcode(int id)
+        {
+            var data = await _service.GetByIdDtoAsync(id);
+
+            if (data == null)
+                return NotFound();
+
+            return View(data);
         }
 
         //Auto complete Unit

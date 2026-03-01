@@ -1,73 +1,122 @@
-﻿@model IEnumerable<Items>
+﻿@model NEW_FINAL_ERP.DTo.PagedResultItemsDto<NEW_FINAL_ERP.Models.Items>
+
+@{
+    var search = ViewBag.Search as string;
+}
 
 <h3>Items</h3>
-<button class="btn btn-primary mb-3" onclick="openCreate()">
-	Tambah Items
-</button>
+
+<div class="d-flex justify-content-between mb-3">
+    <button class="btn btn-primary" onclick="openCreate()">
+        Tambah Items
+    </button>
+
+    <input type="text"
+           id="searchBox"
+           class="form-control w-25"
+           placeholder="Cari Item Code / Name..."
+           value="@search" />
+</div>
 
 <table class="table table-bordered">
 
-	<thead>
-		<tr>
-			<th>Item Code</th>
-			<th>Item Name</th>
-			<th>Unit</th>
-		</tr>
-	</thead>
+    <thead>
+        <tr>
+            <th>Item Code</th>
+            <th>Item Name</th>
+            <th>Unit</th>
+            <th width="150">Action</th>
+        </tr>
+    </thead>
 
-	<tbody>
-		@foreach (var item in Model)
-		{
-			<tr>
-				<td>@item.ItemCode</td>
-				<td>@item.ItemName</td>
-				<td>@item.UnitName</td>
-				<td>
-					<button class="btn btn-warning"
-							onclick="openEdit(@item.ItemId)">
-						Edit
-					</button>
+    <tbody>
+        @if (Model.Data.Any())
+        {
+            foreach (var item in Model.Data)
+            {
+                <tr>
+                    <td>@item.ItemCode</td>
+                    <td>@item.ItemName</td>
+                    <td>@item.UnitName</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm"
+                                onclick="openEdit(@item.ItemId)">
+                            Edit
+                        </button>
 
-					<button class="btn btn-danger"
-							onclick="deleteData(@item.ItemId)">
-						Delete
-					</button>
-				</td>
-			</tr>
-		}
-	</tbody>
+                        <button class="btn btn-danger btn-sm"
+                                onclick="deleteData(@item.ItemId)">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="4" class="text-center">Data tidak ditemukan</td>
+            </tr>
+        }
+    </tbody>
+</table>
 
-	</table>
+<!-- PAGING -->
+<nav>
+    <ul class="pagination">
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            <li class="page-item @(i == Model.Page ? "active" : "")">
+                <a class="page-link"
+                   href="@Url.Action("Index", new { page = i, search = search })">
+                    @i
+                </a>
+            </li>
+        }
+    </ul>
+</nav>
 
-	<div id="modalContainer"></div>
+<div id="modalContainer"></div>
 
 @section Scripts {
 
-	<script>
+    <script>
 
-		function openCreate(){
-		$.get('/Items/Create',res=>{
-		$('#modalContainer').html(res);
-		$('#itemsModal').modal('show');
-		});
-		}
+        // SEARCH DELAY
+        let timer;
+        $('#searchBox').keyup(function () {
 
-		function openEdit(id){
-		$.get('/Items/Edit/'+id,res=>{
-		$('#modalContainer').html(res);
-		$('#itemsModal').modal('show');
-		});
-		}
+            clearTimeout(timer);
 
-		function deleteData(id){
+            let value = $(this).val();
 
-		if(!confirm("Yakin hapus?")) return;
+            timer = setTimeout(function () {
+                window.location.href = '/Items?search=' + value;
+            }, 500);
+        });
 
-		$.post('/Items/Delete/'+id,()=>{
-		location.reload();
-		});
-		}
+        function openCreate(){
+            $.get('/Items/Create',res=>{
+                $('#modalContainer').html(res);
+                $('#itemsModal').modal('show');
+            });
+        }
 
-	</script>
+        function openEdit(id){
+            $.get('/Items/Edit/'+id,res=>{
+                $('#modalContainer').html(res);
+                $('#itemsModal').modal('show');
+            });
+        }
+
+        function deleteData(id){
+            if(!confirm("Yakin hapus?")) return;
+
+            $.post('/Items/Delete/'+id,()=>{
+                location.reload();
+            });
+        }
+
+    </script>
 
 }

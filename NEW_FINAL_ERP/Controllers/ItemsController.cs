@@ -16,12 +16,18 @@ namespace NEW_FINAL_ERP.Controllers
             _unitService = unitService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search, int page = 1)
         {
-            return View(await _service.GetAll());
+            int pageSize = 5;
+
+            var result = await _service.GetAll(search, page, pageSize);
+
+            ViewBag.Search = search;
+
+            return View(result);
         }
 
-        
+
         public IActionResult Create()
         {
             LoadUnit();

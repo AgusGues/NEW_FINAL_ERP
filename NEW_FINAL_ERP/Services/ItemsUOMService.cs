@@ -40,12 +40,23 @@ namespace NEW_FINAL_ERP.Services
         // =========================================
         // LIST
         // =========================================
-        public Task<IEnumerable<ItemsUomListDto>> GetAll() => _repo.GetAll();
+        public Task<PagedResultItemsUom<ItemsUomListDto>>GetAll(string? search, int page, int pageSize)
+        {
+            return _repo.GetAll(search, page, pageSize);
+        }
 
         // =========================================
         // GET ENTITY BY ID (Edit)
         // =========================================
-        
+        public async Task<ItemsUom?> GetById(int id)
+        {
+            return await _repo.GetById(id);
+        }
+
+        public async Task<ItemsUomListDto?> GetByIdDtoAsync(int id)
+        {
+            return await _repo.GetByIdDtoAsync(id);
+        }
 
         //autocomplete items
         public Task<IEnumerable<object>> SearchItemAsync(string term)

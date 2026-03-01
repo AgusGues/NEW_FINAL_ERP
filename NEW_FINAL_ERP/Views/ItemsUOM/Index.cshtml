@@ -1,4 +1,6 @@
-﻿@model IEnumerable<NEW_FINAL_ERP.DTo.ItemsUomListDto>
+﻿@using NEW_FINAL_ERP.DTo
+@using NEW_FINAL_ERP.Infrastructure
+@model PagedResultItemsUom<ItemsUomListDto>
 
 <div class="container-fluid mt-3">
 
@@ -9,10 +11,24 @@
         </button>
     </div>
 
+    <!-- SEARCH -->
+    <form id="searchForm" method="get" asp-action="Index" class="row mb-3">
+        <div class="col-md-4">
+            <input type="text"
+                   id="searchInput"
+                   name="search"
+                   value="@Context.Request.Query["search"]"
+                   class="form-control"
+                   placeholder="Search item code, name, barcode..." />
+        </div>
+    </form>
+
+    <!-- TABLE -->
     <div class="table-responsive">
         <table class="table table-bordered table-striped table-hover">
             <thead class="table-dark">
                 <tr>
+                    <th width="60">No</th>
                     <th>Item Code</th>
                     <th>Item Name</th>
                     <th>Satuan</th>
@@ -27,71 +43,119 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
+                @if (Model.Data.Any())
+                {
+                    var no = ((Model.Page - 1) * Model.PageSize);
+
+                    foreach (var item in Model.Data)
+                    {
+                        no++;
+
+                        <tr>
+                            <td>@no</td>
+                            <td>@item.ItemCode</td>
+                            <td>@item.ItemName</td>
+                            <td>@item.Satuan</td>
+                            <td>@item.SatuanKonversi</td>
+                            <td>@item.ConversionToBase.ToString("N0")</td>
+                            <td>
+                                @if (item.IsBase)
+                                {
+                                    <span class="badge bg-success">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-dark">No</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.IsDefaultSales)
+                                {
+                                    <span class="badge bg-success">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">No</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.IsDefaultPurchase)
+                                {
+                                    <span class="badge bg-success">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">No</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.Barcode))
+                                {
+                                    <a href="@Url.Action("PrintBarcode", "ItemsUOM", new { id = item.ItemUOMId })"
+                                       target="_blank"
+                                       class="text-decoration-none fw-bold">
+                                        @item.Barcode
+                                    </a>
+                                }
+                            </td>
+                            <td>
+                                @if (item.IsInternalBarcode)
+                                {
+                                    <span class="badge bg-primary">External</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Internal</span>
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-warning"
+                                        onclick="openModal(@item.ItemUOMId)">
+                                    Edit
+                                </button>
+
+                                <button class="btn btn-sm btn-danger"
+                                        onclick="deleteData(@item.ItemUOMId)">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
                 {
                     <tr>
-                        <td>@item.ItemCode</td>
-                        <td>@item.ItemName</td>
-                        <td>@item.Satuan</td>
-                        <td>@item.SatuanKonversi</td>
-                        <td>@item.ConversionToBase.ToString("N0")</td>
-                        <td>
-                            @if (item.IsBase)
-                            {
-                                <span class="badge bg-success">Yes</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-light text-dark">No</span>
-                            }
-                        </td>
-                        <td>
-                            @if (item.IsDefaultSales)
-                            {
-                                <span class="badge bg-success">Yes</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning text-dark">No</span>
-                            }
-                        </td>
-                        <td>
-                            @if (item.IsDefaultPurchase)
-                            {
-                                <span class="badge bg-success">Yes</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning text-dark">No</span>
-                            }
-                        </td>
-                        <td>@item.Barcode</td>
-                        <td>
-                            @if (item.IsInternalBarcode)
-                            {
-                                <span class="badge bg-success">External</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-success">Internal</span>
-                            }
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-warning"
-                                    onclick="openModal(@item.ItemUOMId)">
-                                Edit
-                            </button>
-
-                            <button class="btn btn-sm btn-danger"
-                                    onclick="deleteData(@item.ItemUOMId)">
-                                Delete
-                            </button>
+                        <td colspan="12" class="text-center">
+                            No data found
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
+
+    <!-- PAGINATION -->
+    @if (Model.TotalPages > 1)
+    {
+        <nav>
+            <ul class="pagination justify-content-center">
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.Page ? "active" : "")">
+                        <a class="page-link"
+                           href="@Url.Action("Index", new {
+                                page = i,
+                                search = Context.Request.Query["search"]
+                           })">
+                            @i
+                        </a>
+                    </li>
+                }
+
+            </ul>
+        </nav>
+    }
 
 </div>
 
@@ -100,14 +164,23 @@
 @section Scripts {
     <script>
 
+        let typingTimer;
+        const delay = 500; // 0.5 detik
+
+        $('#searchInput').on('keyup', function () {
+            clearTimeout(typingTimer);
+
+            typingTimer = setTimeout(function () {
+                $('#searchForm').submit();
+            }, delay);
+        });
+
         function openModal(id) {
             $.get('/ItemsUOM/Modal', { id: id }, function (data) {
                 $('#modalContainer').html(data);
                 $('#itemUomModal').modal('show');
             });
         }
-
-        
 
         function deleteData(id) {
             if (!confirm("Are you sure?")) return;
@@ -118,6 +191,5 @@
                 }
             });
         }
-
     </script>
 }

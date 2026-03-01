@@ -2,6 +2,7 @@ using System.Data;
 using Microsoft.Data.SqlClient;
 using NEW_FINAL_ERP.Infrastructure;
 using NEW_FINAL_ERP.Repositories;
+
 using NEW_FINAL_ERP.Repositories.Implementations;
 using NEW_FINAL_ERP.Services;
 
@@ -33,6 +34,7 @@ builder.Services.AddScoped<INumberSequenceRepository, NumberSequenceRepository>(
 builder.Services.AddScoped<IItemsRepository, ItemsRepository>();
 builder.Services.AddScoped<IUnitRepository, UnitRepository>();
 builder.Services.AddScoped<IItemsUOMRepository, ItemsUOMRepository>();
+builder.Services.AddScoped<IItemPriceRepository,ItemPriceRepository>();
 
 
 // ==========================
@@ -44,6 +46,7 @@ builder.Services.AddScoped<BranchService>();
 builder.Services.AddScoped<ItemsServices>();
 builder.Services.AddScoped<UnitService>();
 builder.Services.AddScoped<ItemsUOMService>();
+builder.Services.AddScoped<ItemPriceService>();
 
 builder.Services.AddControllersWithViews();
 
@@ -55,6 +58,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=ItemsUOM}/{action=Index}/{id?}");
+    pattern: "{controller=ItemPrice}/{action=Index}/{id?}");
 
 app.Run();

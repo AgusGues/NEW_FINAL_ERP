@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using Dapper;
 using NEW_FINAL_ERP.Models;
 using NEW_FINAL_ERP.Infrastructure;
+using NEW_FINAL_ERP.DTo;
 
 namespace NEW_FINAL_ERP.Repositories.Implementations
 {
@@ -20,13 +21,45 @@ namespace NEW_FINAL_ERP.Repositories.Implementations
             await uow.Conn.ExecuteAsync(sql, new {id}, uow.Tx);
         }
 
-        public async Task<IEnumerable<Items>> GetAll()
+        public async Task<PagedResultItemsDto<Items>> GetAll(string? search, int page, int pageSize)
         {
             using var conn = new SqlConnection(_connString);
-            var sql = @"
-                        select i.ItemId,i.itemcode,i.itemname,u.unitname from Items i join unit u on i.Unit = u.unitid where i.isactive=1
-                      ";
-            return await conn.QueryAsync<Items>(sql);
+
+            var where = "WHERE i.IsActive = 1";
+
+            if (!string.IsNullOrWhiteSpace(search))
+                where += " AND (i.ItemCode LIKE '%' + @search + '%' OR i.ItemName LIKE '%' + @search + '%')";
+
+            var totalData = await conn.ExecuteScalarAsync<int>($@"
+        SELECT COUNT(1)
+        FROM Items i
+        {where}", new { search });
+
+            var offset = (page - 1) * pageSize;
+
+            var data = await conn.QueryAsync<Items>($@"
+        SELECT 
+            i.ItemId,
+            i.ItemCode,
+            i.ItemName,
+            i.Unit as UnitId,
+            u.UnitName
+        FROM Items i
+        JOIN Unit u ON i.Unit = u.UnitId
+        {where}
+        ORDER BY i.ItemId DESC
+        OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY",
+                new { search, offset, pageSize });
+
+            return new PagedResultItemsDto<Items>
+            {
+                Data = data,
+                Page = page,
+                PageSize = pageSize,
+                TotalData = totalData,
+                TotalPages = (int)Math.Ceiling(totalData / (double)pageSize),
+                Search = search
+            };
         }
 
         public async Task<Items?> GetById(int id)

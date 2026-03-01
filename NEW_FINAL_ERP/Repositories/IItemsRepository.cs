@@ -1,4 +1,5 @@
-﻿using NEW_FINAL_ERP.Infrastructure;
+﻿using NEW_FINAL_ERP.DTo;
+using NEW_FINAL_ERP.Infrastructure;
 using NEW_FINAL_ERP.Models;
 using System.Data;
 
@@ -6,7 +7,8 @@ namespace NEW_FINAL_ERP.Repositories
 {
     public interface IItemsRepository
     {
-        Task<IEnumerable<Items>> GetAll();
+        //Task<IEnumerable<Items>> GetAll();
+        Task<PagedResultItemsDto<Items>> GetAll(string? search, int page, int pageSize);
 
         Task<Items?> GetById(int id);
 

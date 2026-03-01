@@ -1,0 +1,54 @@
+﻿<div class="modal-header">
+    <h5 class="modal-title">Form Item Price</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+
+    <form id="itemPriceForm">
+
+        <input type="hidden" id="ItemPriceId" value="0" />
+
+        <!-- ITEM -->
+        <div class="mb-3">
+            <label class="form-label">Item</label>
+            <select id="ItemId" class="form-control" style="width:100%"></select>
+        </div>
+
+        <!-- UNIT -->
+        <div class="mb-3">
+            <label class="form-label">Unit</label>
+            <select id="UnitId" class="form-control" style="width:100%"></select>
+        </div>
+
+        <!-- PRICE TYPE -->
+        <div class="mb-3">
+            <label class="form-label">Price Type</label>
+            <select id="PriceType" class="form-control">
+                <option value="Retail">Retail</option>
+                <option value="Grosir">Grosir</option>
+                <option value="Distributor">Distributor</option>
+            </select>
+        </div>
+
+        <!-- PRICE -->
+        <div class="mb-3">
+            <label class="form-label">Price</label>
+            <input type="number" step="0.01" id="Price" class="form-control" required />
+        </div>
+
+        <!-- EFFECTIVE DATE -->
+        <div class="mb-3">
+            <label class="form-label">Effective Date</label>
+            <input type="date" id="EffectiveDate" class="form-control" required />
+        </div>
+
+    </form>
+
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+    <button type="button" class="btn btn-primary" id="btnSave">Simpan</button>
+</div>
+

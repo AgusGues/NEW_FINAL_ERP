@@ -1,0 +1,227 @@
+﻿@model NEW_FINAL_ERP.DTo.PagedResultItemPriceDto<NEW_FINAL_ERP.DTo.ItemPriceListDto>
+
+@{
+    ViewData["Title"] = "Item Price";
+    var search = ViewBag.Search as string;
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between mb-3">
+        <h4>Item Price</h4>
+        <button class="btn btn-primary" id="btnAdd">+ Tambah</button>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="mb-3">
+        <input type="text" id="searchBox" class="form-control" placeholder="Cari Item / Price Type..." value="@search" />
+    </div>
+
+    <!-- TABLE -->
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Item Code</th>
+                <th>Item Name</th>
+                <th>Unit</th>
+                <th>Price Type</th>
+                <th>Price</th>
+                <th>Effective Date</th>
+                <th width="120">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Data.Any())
+            {
+                foreach (var item in Model.Data)
+                {
+                    <tr>
+                        <td>@item.ItemCode</td>
+                        <td>@item.ItemName</td>
+                        <td>@item.UnitName</td>
+                        <td>@item.PriceType</td>
+                        <td>@item.Price.ToString("N0")</td>
+                        <td>@item.EffectiveDate.ToString("dd-MM-yyyy")</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning btnEdit" data-id="@item.ItemPriceId">Edit</button>
+                            <button class="btn btn-sm btn-danger btnDelete" data-id="@item.ItemPriceId">Delete</button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" class="text-center">Data tidak ditemukan.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- PAGING -->
+    <nav>
+        <ul class="pagination">
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.Page ? "active" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = i, search = search })">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+</div>
+
+<!-- MODAL -->
+<div class="modal fade" id="itemPriceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            @await Html.PartialAsync("_Form")
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function(){
+
+            // ==============================
+            // SEARCH
+            // ==============================
+            let searchTimer;
+            $('#searchBox').keyup(function(){
+                clearTimeout(searchTimer);
+                let value = $(this).val();
+                searchTimer = setTimeout(function(){
+                    window.location.href = "/ItemPrice?search=" + value;
+                }, 500);
+            });
+
+            // ==============================
+            // OPEN ADD / EDIT MODAL
+            // ==============================
+            $('#btnAdd, .btnEdit').click(function(){
+                resetForm();
+
+                // Destroy Select2 dulu jika sudah di-init
+                if ($('#ItemId').hasClass("select2-hidden-accessible")) {
+                    $('#ItemId').select2('destroy');
+                }
+                if ($('#UnitId').hasClass("select2-hidden-accessible")) {
+                    $('#UnitId').select2('destroy');
+                }
+
+                // INIT SELECT2 ITEM
+                $('#ItemId').select2({
+                    dropdownParent: $('#itemPriceModal'),
+                    placeholder: 'Pilih Item',
+                    allowClear: true,
+                    ajax: {
+                        url: '/ItemPrice/SearchItem',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params){ return { term: params.term || '' }; },
+                        processResults: function(data){ return { results: data }; }
+                    }
+                });
+
+                // INIT SELECT2 UNIT
+                $('#UnitId').select2({
+                    dropdownParent: $('#itemPriceModal'),
+                    placeholder: 'Pilih Unit',
+                    allowClear: true,
+                    ajax: {
+                        url: '/ItemPrice/SearchUnit',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params){ return { term: params.term || '' }; },
+                        processResults: function(data){ return { results: data }; }
+                    }
+                });
+
+                let id = $(this).data('id');
+                        if(id){ // Edit
+            $.get('/ItemPrice/GetById', { id: id }, function(res){
+                if(res.success){
+                    let data = res.data;
+
+                    $('#ItemPriceId').val(data.itemPriceId);
+
+                    // ===== SET ITEM SELECT2 =====
+                    let itemOption = new Option(data.itemName ?? 'Selected Item', data.itemId, true, true);
+                    $('#ItemId').append(itemOption).trigger('change');
+
+                    // ===== SET UNIT SELECT2 =====
+                    let unitOption = new Option(data.unitName ?? 'Selected Unit', data.unitId, true, true);
+                    $('#UnitId').append(unitOption).trigger('change');
+
+                    $('#PriceType').val(data.priceType);
+                    $('#Price').val(data.price);
+                    $('#EffectiveDate').val(data.effectiveDate.split('T')[0]);
+                }
+                else {
+                    alert(res.message);
+                }
+            });
+        }
+
+                $('#itemPriceModal').modal('show');
+            });
+
+            // ==============================
+            // DELETE
+            // ==============================
+            $('.btnDelete').click(function(){
+                if(!confirm('Yakin ingin menghapus data ini?')) return;
+                let id = $(this).data('id');
+                $.post('/ItemPrice/Delete', { id: id }, function(res){
+                    if(res.success) location.reload();
+                    else alert(res.message);
+                });
+            });
+
+            // ==============================
+            // SAVE (AJAX)
+            // ==============================
+            $('#btnSave').click(function(){
+                let formData = {
+                    ItemPriceId: $('#ItemPriceId').val(),
+                    ItemId: $('#ItemId').val(),
+                    UnitId: $('#UnitId').val(),
+                    PriceType: $('#PriceType').val(),
+                    Price: $('#Price').val(),
+                    EffectiveDate: $('#EffectiveDate').val(),
+                    IsActive: true
+                };
+
+                if(!formData.ItemId || !formData.UnitId || !formData.Price || !formData.EffectiveDate){
+                    alert("Semua field wajib diisi.");
+                    return;
+                }
+
+                $.ajax({
+                    url: '/ItemPrice/Save',
+                    type: 'POST',
+                    data: formData,
+                    success: function(res){
+                        if(res.success) location.reload();
+                        else alert(res.message);
+                    },
+                    error: function(){ alert("Terjadi kesalahan sistem."); }
+                });
+            });
+
+            // ==============================
+            // RESET FORM
+            // ==============================
+            function resetForm(){
+                $('#ItemPriceId').val(0);
+                $('#ItemId').val(null).trigger('change');
+                $('#UnitId').val(null).trigger('change');
+                $('#PriceType').val('Retail');
+                $('#Price').val('');
+                $('#EffectiveDate').val('');
+            }
+
+        });
+    </script>
+}

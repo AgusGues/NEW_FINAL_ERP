@@ -9,6 +9,13 @@
         "dist/css/select2.min.css",
         "dist/js/select2.min.js"
       ]
+    },
+    {
+      "library": "jsbarcode@3.11.6",
+      "destination": "wwwroot/lib/jsbarcode/",
+      "files": [
+        "dist/JsBarcode.all.min.js"
+      ]
     }
   ]
 }

@@ -1,0 +1,86 @@
+﻿@model NEW_FINAL_ERP.DTo.ItemsUomListDto
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Print Barcode</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+    <style>
+        html, body {
+            width: 58mm;
+            height: 30mm;
+            margin: 0;
+            padding: 0;
+        }
+
+        .label {
+            width: 58mm;
+            height: 30mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .item-name {
+            font-size: 10pt;
+            font-weight: bold;
+            margin-bottom: 2mm;
+            text-align: center;
+        }
+
+        .barcode-number {
+            font-size: 9pt;
+            margin-top: 2mm;
+            text-align: center;
+        }
+
+        svg {
+            width: 50mm !important;
+            height: 15mm !important;
+        }
+
+        @@page {
+            size: 58mm 30mm;
+            margin: 0;
+        }
+
+        @@media print {
+            body {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+
+<body onload="window.print()">
+
+    <div class="label">
+        <div class="item-name">
+            @Model.ItemName || Satuan @Model.SatuanKonversi || isi @Model.ConversionToBase.ToString("N0")
+        </div>
+
+        <svg id="barcode"></svg>
+
+        <div class="barcode-number">
+            @Model.Barcode
+        </div>
+    </div>
+
+    <script>
+        JsBarcode("#barcode", "@Model.Barcode", {
+            format: "CODE128",
+            width: 2,
+            height: 50,
+            displayValue: false,
+            margin: 0
+        });
+    </script>
+
+</body>
+</html>

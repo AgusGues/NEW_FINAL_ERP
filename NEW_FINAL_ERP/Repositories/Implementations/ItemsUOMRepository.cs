@@ -27,34 +27,86 @@ namespace NEW_FINAL_ERP.Repositories.Implementations
             await uow.Conn.ExecuteAsync(sql, new { id }, uow.Tx);
         }
 
-        public async Task<IEnumerable<ItemsUomListDto>> GetAll()
+        public async Task<PagedResultItemsUom<ItemsUomListDto>>GetAll(string? search, int page, int pageSize)
         {
             using var conn = new SqlConnection(_connString);
 
-            var sql = @"
-                SELECT 
-                    iu.ItemUOMId,
-                    iu.ItemId,
-                    i.ItemCode,
-                    i.ItemName,
-                    u.UnitName  AS Satuan,
-                    ux.UnitName AS SatuanKonversi,
-                    iu.ConversionToBase,
-                    iu.IsBase,
-                    iu.IsDefaultSales,
-                    iu.IsDefaultPurchase,
-                    iu.Barcode,
-                    iu.IsInternalBarcode
-                FROM ItemUOM iu
-                JOIN Items i ON iu.ItemId = i.ItemId
-                JOIN Unit u ON i.Unit = u.UnitId         
-                JOIN Unit ux ON iu.UnitId = ux.UnitId     
-                WHERE iu.IsActive = 1 
-                  AND i.IsActive = 1
-            ";
+            var where = @"
+                        WHERE iu.IsActive = 1 
+                        AND i.IsActive = 1
+                        ";
 
-            return await conn.QueryAsync<ItemsUomListDto>(sql);
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                where += @"
+                         AND (
+                                i.ItemCode LIKE '%' + @search + '%'
+                                OR i.ItemName LIKE '%' + @search + '%'
+                                OR iu.Barcode LIKE '%' + @search + '%'
+                             )
+                             ";
+            }
+
+            // =========================
+            // HITUNG TOTAL DATA
+            // =========================
+            var countSql = $@"
+                            SELECT COUNT(1)
+                            FROM ItemUOM iu
+                            JOIN Items i ON iu.ItemId = i.ItemId
+                            JOIN Unit u ON i.Unit = u.UnitId
+                            JOIN Unit ux ON iu.UnitId = ux.UnitId
+        {where}
+                            ";
+
+            var totalData = await conn.ExecuteScalarAsync<int>(
+                countSql,
+                new { search }
+            );
+
+            // =========================
+            // PAGING
+            // =========================
+            var offset = (page - 1) * pageSize;
+
+            var dataSql = $@"
+            SELECT 
+            iu.ItemUOMId,
+            iu.ItemId,
+            i.ItemCode,
+            i.ItemName,
+            u.UnitName  AS Satuan,
+            ux.UnitName AS SatuanKonversi,
+            iu.ConversionToBase,
+            iu.IsBase,
+            iu.IsDefaultSales,
+            iu.IsDefaultPurchase,
+            iu.Barcode,
+            iu.IsInternalBarcode
+        FROM ItemUOM iu
+        JOIN Items i ON iu.ItemId = i.ItemId
+        JOIN Unit u ON i.Unit = u.UnitId         
+        JOIN Unit ux ON iu.UnitId = ux.UnitId
+        {where}
+        ORDER BY iu.ItemUOMId DESC
+        OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
+       ";
+
+            var data = await conn.QueryAsync<ItemsUomListDto>(
+                dataSql,
+                new { search, offset, pageSize }
+            );
+
+            return new PagedResultItemsUom<ItemsUomListDto>
+            {
+                Data = data,
+                Page = page,
+                PageSize = pageSize,
+                TotalData = totalData,
+                TotalPages = (int)Math.Ceiling(totalData / (double)pageSize)
+            };
         }
+
 
         // ================================
         // GET BY ID (Entity for Update)
@@ -80,6 +132,27 @@ namespace NEW_FINAL_ERP.Repositories.Implementations
             ";
 
             return await conn.QueryFirstOrDefaultAsync<ItemsUom>(sql, new { id });
+        }
+
+        public async Task<ItemsUomListDto?> GetByIdDtoAsync(int id)
+        {
+            using var connection = new SqlConnection(_connString);
+
+            var sql = @"
+                        SELECT 
+                            u.ItemUOMId,
+                            i.ItemCode,
+                            i.ItemName,
+                            un.UnitName As SatuanKonversi,
+                            u.ConversionToBase,
+                            u.Barcode
+                        FROM ItemUOM u
+                        INNER JOIN Items i ON u.ItemId = i.ItemId
+                        join Unit un on u.UnitId=un.UnitId
+                        WHERE u.ItemUOMId = @Id and u.IsActive=1 and i.IsActive=1 and un.IsActive=1
+                    ";
+
+            return await connection.QueryFirstOrDefaultAsync<ItemsUomListDto>(sql, new { Id = id });
         }
 
 
