@@ -1,0 +1,289 @@
+﻿@using NEW_FINAL_ERP.DTo
+@model PagedResultPurchaseDto<PurchaseListDto>
+
+@{
+    ViewData["Title"] = "Purchase";
+}
+
+<h3>Purchase</h3>
+
+<div class="mb-3">
+    <input type="text" id="txtSearch" class="form-control" placeholder="Search..." />
+</div>
+
+<div class="mb-3">
+    <button class="btn btn-primary" onclick="openCreate()">Tambah Purchase</button>
+</div>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Number</th>
+            <th>Date</th>
+            <th>Supplier</th>
+            <th>Status</th>
+            <th>GrandTotal</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="purchaseTable">
+    </tbody>
+</table>
+
+<div id="pagination"></div>
+
+<!-- Modal Create/Edit -->
+<div class="modal fade" id="modalForm" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Create Purchase</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="purchaseForm">
+                    <input type="hidden" id="PurchaseId" />
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            <label>Supplier</label>
+                            <select id="SupplierId" class="form-select"></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Purchase Date</label>
+                            <input type="date" id="PurchaseDate" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label>Currency</label>
+                            <input type="text" id="CurrencyCode" class="form-control" value="IDR" />
+                        </div>
+                    </div>
+
+                    <!-- Detail Grid -->
+                    <table class="table table-sm table-bordered" id="detailTable">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>UOM</th>
+                                <th>Unit</th>
+                                <th>Qty</th>
+                                <th>Unit Price</th>
+                                <th>Discount</th>
+                                <th>Tax</th>
+                                <th>Line Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+
+                    <button type="button" class="btn btn-sm btn-secondary mb-2" onclick="addDetailRow()">Add Detail</button>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="savePurchase()">Save</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentPage = 1;
+        let pageSize = 5;
+
+        // =========================================================
+        // Load Purchase Table
+        // =========================================================
+        async function loadTable(page = 1, search = '') {
+            currentPage = page;
+            const res = await fetch(`/Purchase/GetPaged?page=${page}&pageSize=${pageSize}&search=${search}`);
+            const data = await res.json();
+
+            const tbody = document.querySelector('#purchaseTable');
+            tbody.innerHTML = '';
+            data.data.forEach(p => {
+                tbody.innerHTML += `<tr>
+                    <td>${p.purchaseNumber}</td>
+                    <td>${new Date(p.purchaseDate).toLocaleDateString()}</td>
+                    <td>${p.supplierName}</td>
+                    <td>${p.status}</td>
+                    <td>${p.grandTotal}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="edit(${p.purchaseId})">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="del(${p.purchaseId})">Delete</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        // =========================================================
+        // Search
+        // =========================================================
+        document.querySelector('#txtSearch').addEventListener('keyup', e => {
+            loadTable(1, e.target.value);
+        });
+
+        // =========================================================
+        // Open Create Modal
+        // =========================================================
+        function openCreate() {
+            document.getElementById('purchaseForm').reset();
+            document.getElementById('PurchaseId').value = 0;
+            clearDetailGrid();
+            loadSupplierSelect();
+            new bootstrap.Modal(document.getElementById('modalForm')).show();
+        }
+
+        // =========================================================
+        // Load Supplier Select2
+        // =========================================================
+        async function loadSupplierSelect() {
+            const res = await fetch('/Purchase/SearchSupplier?term=');
+            const suppliers = await res.json();
+            const select = document.getElementById('SupplierId');
+            select.innerHTML = suppliers.map(s => `<option value="${s.id}">${s.text}</option>`).join('');
+        }
+
+        // =========================================================
+        // Detail Grid Functions
+        // =========================================================
+        function addDetailRow(d = {}) {
+            const tbody = document.querySelector('#detailTable tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><select class="form-select itemSelect"></select></td>
+                <td><select class="form-select uomSelect"></select></td>
+                <td><select class="form-select unitSelect"></select></td>
+                <td><input type="number" class="form-control qty" value="${d.quantity || 1}"/></td>
+                <td><input type="number" class="form-control price" value="${d.unitPrice || 0}"/></td>
+                <td><input type="number" class="form-control discount" value="${d.discountAmount || 0}"/></td>
+                <td><input type="number" class="form-control tax" value="${d.taxAmount || 0}"/></td>
+                <td class="lineTotal">${d.lineTotal || 0}</td>
+                <td><button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">Delete</button></td>
+            `;
+            tbody.appendChild(row);
+            loadItemSelect(row);
+            loadUomSelect(row);
+            loadUnitSelect(row);
+        }
+
+        // =========================================================
+        // Load Item/UOM/Unit Selects
+        // =========================================================
+        async function loadItemSelect(row){
+            const res = await fetch('/Purchase/SearchItem?term=');
+            const items = await res.json();
+            const select = row.querySelector('.itemSelect');
+            select.innerHTML = items.map(i => `<option value="${i.id}">${i.text}</option>`).join('');
+        }
+        async function loadUomSelect(row){
+            const res = await fetch('/Purchase/SearchUnit?term=');
+            const items = await res.json();
+            const select = row.querySelector('.uomSelect');
+            select.innerHTML = items.map(i => `<option value="${i.id}">${i.text}</option>`).join('');
+        }
+        async function loadUnitSelect(row){
+            const res = await fetch('/Purchase/SearchUnit?term=');
+            const items = await res.json();
+            const select = row.querySelector('.unitSelect');
+            select.innerHTML = items.map(i => `<option value="${i.id}">${i.text}</option>`).join('');
+        }
+
+        // =========================================================
+        // Clear Detail Grid
+        // =========================================================
+        function clearDetailGrid() {
+            document.querySelector('#detailTable tbody').innerHTML = '';
+        }
+
+        // =========================================================
+        // Save Purchase (Create / Update)
+        // =========================================================
+        async function savePurchase() {
+            const header = {
+                purchaseId: +document.getElementById('PurchaseId').value,
+                supplierId: +document.getElementById('SupplierId').value,
+                purchaseDate: document.getElementById('PurchaseDate').value,
+                currencyCode: document.getElementById('CurrencyCode').value,
+                details: []
+            };
+
+            document.querySelectorAll('#detailTable tbody tr').forEach(row => {
+                header.details.push({
+                    itemId: +row.querySelector('.itemSelect').value,
+                    itemUOMId: +row.querySelector('.uomSelect').value,
+                    unitId: +row.querySelector('.unitSelect').value,
+                    quantity: +row.querySelector('.qty').value,
+                    unitPrice: +row.querySelector('.price').value,
+                    discountAmount: +row.querySelector('.discount').value,
+                    taxAmount: +row.querySelector('.tax').value
+                });
+            });
+
+            const url = header.purchaseId === 0 ? '/Purchase/Create' : '/Purchase/Update';
+            const res = await fetch(url, {
+                method: 'POST',
+                body: JSON.stringify(header),
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const data = await res.json();
+            if(data.success){
+                alert('Saved successfully.');
+                loadTable(currentPage);
+                bootstrap.Modal.getInstance(document.getElementById('modalForm')).hide();
+            }else{
+                alert(data.message);
+            }
+        }
+
+        // =========================================================
+        // Edit Purchase
+        // =========================================================
+        async function edit(id){
+            const res = await fetch(`/Purchase/GetById?id=${id}`);
+            const data = await res.json();
+            if(!data.success){
+                alert(data.message);
+                return;
+            }
+
+            const header = data.data;
+            document.getElementById('PurchaseId').value = header.purchaseId;
+            document.getElementById('SupplierId').value = header.supplierId;
+            document.getElementById('PurchaseDate').value = header.purchaseDate.split('T')[0];
+            document.getElementById('CurrencyCode').value = header.currencyCode;
+
+            clearDetailGrid();
+            header.details.forEach(d => addDetailRow(d));
+
+            new bootstrap.Modal(document.getElementById('modalForm')).show();
+        }
+
+        // =========================================================
+        // Delete Purchase
+        // =========================================================
+        async function del(id){
+            if(!confirm('Yakin ingin dihapus?')) return;
+            const res = await fetch('/Purchase/Delete', {
+                method: 'POST',
+                body: JSON.stringify({ id }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await res.json();
+            if(data.success){
+                alert('Deleted.');
+                loadTable(currentPage);
+            }else{
+                alert(data.message);
+            }
+        }
+
+        // =========================================================
+        // Initial Load
+        // =========================================================
+        loadTable();
+    </script>
+}

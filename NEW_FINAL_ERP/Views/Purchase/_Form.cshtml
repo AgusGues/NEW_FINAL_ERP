@@ -1,0 +1,148 @@
+﻿@model NEW_FINAL_ERP.DTo.PurchaseFormDto
+
+
+<div id="modalPurchaseForm" class="modal" style="display:none;">
+    <div class="modal-content" style="padding:20px; width:800px;">
+        <h4 id="modalTitle">Tambah Purchase</h4>
+        <form id="frmPurchase">
+            <input type="hidden" id="PurchaseId" value="@Model.PurchaseId" />
+            <input type="hidden" id="UpdatedAt" value="@Model.UpdatedAt?.ToString("O")" />
+
+            <div>
+                <label>Supplier</label>
+                <select id="SupplierId" style="width:100%"></select>
+            </div>
+
+            <div>
+                <label>Tanggal</label>
+                <input type="date" id="PurchaseDate" value="@Model.PurchaseDate.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div>
+                <label>Remarks</label>
+                <input type="text" id="Remarks" value="@Model.Remarks" style="width:100%" />
+            </div>
+
+            <hr />
+
+            <h5>Detail Items</h5>
+            <table id="tblDetails" border="1" width="100%" style="border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>UOM</th>
+                        <th>Unit</th>
+                        <th>Qty</th>
+                        <th>UnitPrice</th>
+                        <th>Discount</th>
+                        <th>Tax</th>
+                        <th>LineTotal</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <button type="button" id="btnAddDetail">Tambah Item</button>
+            <hr />
+            <button type="submit">Simpan</button>
+            <button type="button" onclick="closeModal()">Batal</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    let details = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Details));
+
+    function openModal(dto) {
+        document.getElementById("modalPurchaseForm").style.display = "block";
+        document.getElementById("PurchaseId").value = dto?.PurchaseId || 0;
+        document.getElementById("UpdatedAt").value = dto?.UpdatedAt || "";
+        document.getElementById("PurchaseDate").value = dto?.PurchaseDate?.split('T')[0] || new Date().toISOString().split('T')[0];
+        document.getElementById("Remarks").value = dto?.Remarks || "";
+        details = dto?.Details || [];
+        renderDetails();
+    }
+
+    function closeModal() {
+        document.getElementById("modalPurchaseForm").style.display = "none";
+    }
+
+    function renderDetails() {
+        const tbody = document.querySelector("#tblDetails tbody");
+        tbody.innerHTML = "";
+        details.forEach((d, i) => {
+            tbody.innerHTML += `<tr>
+                <td><input type="text" class="itemName" data-index="${i}" value="${d.itemName || ''}" /></td>
+                <td><input type="text" class="itemUOM" data-index="${i}" value="${d.itemUOMName || ''}" /></td>
+                <td><input type="text" class="unit" data-index="${i}" value="${d.unitName || ''}" /></td>
+                <td><input type="number" class="quantity" data-index="${i}" value="${d.quantity}" /></td>
+                <td><input type="number" class="unitPrice" data-index="${i}" value="${d.unitPrice}" /></td>
+                <td><input type="number" class="discountAmount" data-index="${i}" value="${d.discountAmount}" /></td>
+                <td><input type="number" class="taxAmount" data-index="${i}" value="${d.taxAmount}" /></td>
+                <td>${((d.quantity * d.unitPrice) - d.discountAmount + d.taxAmount).toFixed(2)}</td>
+                <td><button type="button" onclick="removeDetail(${i})">Hapus</button></td>
+            </tr>`;
+        });
+    }
+
+    function removeDetail(index) {
+        details.splice(index, 1);
+        renderDetails();
+    }
+
+    document.getElementById("btnAddDetail").addEventListener("click", () => {
+        details.push({
+            itemId: 0, itemUOMId:0, unitId:0,
+            quantity:1, unitPrice:0, discountAmount:0, taxAmount:0
+        });
+        renderDetails();
+    });
+
+    document.getElementById("frmPurchase").addEventListener("submit", async e => {
+        e.preventDefault();
+        const dto = {
+            PurchaseId: parseInt(document.getElementById("PurchaseId").value),
+            UpdatedAt: document.getElementById("UpdatedAt").value,
+            PurchaseDate: document.getElementById("PurchaseDate").value,
+            SupplierId: parseInt(document.getElementById("SupplierId").value),
+            Remarks: document.getElementById("Remarks").value,
+            Details: details.map(d => ({
+                ItemId: d.itemId,
+                ItemUOMId: d.itemUOMId,
+                UnitId: d.unitId,
+                Quantity: parseFloat(d.quantity),
+                UnitPrice: parseFloat(d.unitPrice),
+                DiscountAmount: parseFloat(d.discountAmount),
+                TaxAmount: parseFloat(d.taxAmount)
+            }))
+        };
+
+        const res = await fetch("/Purchase/Save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dto)
+        });
+        const data = await res.json();
+        if (data.success) {
+            closeModal();
+            loadData();
+        } else alert(data.message);
+    });
+
+    async function loadSuppliers() {
+        const res = await fetch("/Purchase/SearchSupplier?term=");
+        const suppliers = await res.json();
+        const sel = document.getElementById("SupplierId");
+        sel.innerHTML = "";
+        suppliers.forEach(s => {
+            const opt = document.createElement("option");
+            opt.value = s.id;
+            opt.text = s.text;
+            sel.add(opt);
+        });
+    }
+
+    loadSuppliers();
+    renderDetails();
+</script>
